@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Search, Download, BookOpen, GraduationCap, Filter } from 'lucide-react';
+import { Search, Download, BookOpen, GraduationCap, Filter, Youtube } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -17,6 +16,15 @@ interface Paper {
   downloadUrl: string;
   pages: number;
   difficulty: 'Easy' | 'Medium' | 'Hard';
+}
+
+interface SubjectVideo {
+  subject: string;
+  videos: {
+    title: string;
+    url: string;
+    description: string;
+  }[];
 }
 
 const samplePapers: Paper[] = [
@@ -88,6 +96,79 @@ const samplePapers: Paper[] = [
   }
 ];
 
+const subjectVideos: SubjectVideo[] = [
+  {
+    subject: "Mathematics",
+    videos: [
+      {
+        title: "Khan Academy - Algebra Basics",
+        url: "https://www.youtube.com/watch?v=NybHckSEQBI",
+        description: "Complete introduction to algebraic thinking and problem solving"
+      },
+      {
+        title: "Professor Leonard - Calculus",
+        url: "https://www.youtube.com/watch?v=fYyARMqiaag",
+        description: "Comprehensive calculus lectures for advanced students"
+      }
+    ]
+  },
+  {
+    subject: "Science",
+    videos: [
+      {
+        title: "Crash Course Biology",
+        url: "https://www.youtube.com/watch?v=QnQe0xW_JY4",
+        description: "Engaging biology lessons covering cellular processes and life sciences"
+      },
+      {
+        title: "SciShow - Environmental Science",
+        url: "https://www.youtube.com/watch?v=RS7IzU2VJIQ",
+        description: "Environmental science concepts and sustainability practices"
+      }
+    ]
+  },
+  {
+    subject: "English",
+    videos: [
+      {
+        title: "TED-Ed - Creative Writing",
+        url: "https://www.youtube.com/watch?v=mhvwpkJOXl8",
+        description: "Techniques for developing creative writing skills and storytelling"
+      },
+      {
+        title: "CrashCourse Literature",
+        url: "https://www.youtube.com/watch?v=MSYw502dJNY",
+        description: "Analysis of classic literature and writing techniques"
+      }
+    ]
+  },
+  {
+    subject: "History",
+    videos: [
+      {
+        title: "Crash Course World History",
+        url: "https://www.youtube.com/watch?v=Yocja_N5s1I",
+        description: "Comprehensive overview of world historical events and their impact"
+      },
+      {
+        title: "Extra History - WWII",
+        url: "https://www.youtube.com/watch?v=_uk2NeKBG5A",
+        description: "Detailed exploration of World War II events and consequences"
+      }
+    ]
+  }
+];
+
+const searchTerms = {
+  "Mathematics": ["algebra", "calculus", "geometry", "trigonometry", "statistics", "equations", "functions", "derivatives"],
+  "Science": ["biology", "chemistry", "physics", "cells", "molecules", "atoms", "environment", "ecosystem"],
+  "English": ["literature", "grammar", "writing", "poetry", "essay", "composition", "reading", "vocabulary"],
+  "History": ["ancient", "medieval", "modern", "war", "civilization", "culture", "politics", "revolution"],
+  "Art": ["painting", "drawing", "sculpture", "design", "color", "technique", "style", "artist"],
+  "Music": ["theory", "composition", "instrument", "rhythm", "melody", "harmony", "scales", "performance"],
+  "Physical Education": ["fitness", "sports", "exercise", "health", "nutrition", "training", "athletics", "wellness"]
+};
+
 const grades = ["All Grades", "Elementary", "Middle School", "High School", "University"];
 const subjects = ["All Subjects", "Mathematics", "Science", "English", "History", "Art", "Music", "Physical Education"];
 
@@ -95,6 +176,7 @@ const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedGrade, setSelectedGrade] = useState("All Grades");
   const [selectedSubject, setSelectedSubject] = useState("All Subjects");
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const filteredPapers = samplePapers.filter(paper => {
     const matchesSearch = paper.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -108,7 +190,6 @@ const Index = () => {
 
   const handleDownload = (paper: Paper) => {
     console.log(`Downloading paper: ${paper.title}`);
-    // In a real application, this would handle the actual download
     alert(`Downloading "${paper.title}" - ${paper.pages} pages`);
   };
 
@@ -119,6 +200,16 @@ const Index = () => {
       case 'Hard': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  const handleSearchTermClick = (term: string) => {
+    setSearchTerm(term);
+    setShowSuggestions(false);
+  };
+
+  const getCurrentSubjectVideos = () => {
+    if (selectedSubject === "All Subjects") return [];
+    return subjectVideos.find(sv => sv.subject === selectedSubject)?.videos || [];
   };
 
   return (
@@ -145,8 +236,29 @@ const Index = () => {
                 placeholder="Search papers by title, description, or author..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                onFocus={() => setShowSuggestions(true)}
                 className="pl-10"
               />
+              
+              {/* Search Suggestions */}
+              {showSuggestions && selectedSubject !== "All Subjects" && searchTerms[selectedSubject as keyof typeof searchTerms] && (
+                <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-lg z-10 mt-1">
+                  <div className="p-3">
+                    <p className="text-sm text-gray-600 mb-2">Suggested search terms for {selectedSubject}:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {searchTerms[selectedSubject as keyof typeof searchTerms].map((term) => (
+                        <button
+                          key={term}
+                          onClick={() => handleSearchTermClick(term)}
+                          className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm hover:bg-blue-200 transition-colors"
+                        >
+                          {term}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
             
             {/* Grade Filter */}
@@ -168,7 +280,10 @@ const Index = () => {
 
             {/* Subject Filter */}
             <div className="lg:w-48">
-              <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+              <Select value={selectedSubject} onValueChange={(value) => {
+                setSelectedSubject(value);
+                setShowSuggestions(false);
+              }}>
                 <SelectTrigger>
                   <BookOpen className="h-4 w-4 mr-2" />
                   <SelectValue placeholder="Select Subject" />
@@ -184,6 +299,33 @@ const Index = () => {
             </div>
           </div>
         </div>
+
+        {/* YouTube Videos Section */}
+        {getCurrentSubjectVideos().length > 0 && (
+          <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+              <Youtube className="h-5 w-5 text-red-600 mr-2" />
+              Related YouTube Videos for {selectedSubject}
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {getCurrentSubjectVideos().map((video, index) => (
+                <div key={index} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <h3 className="font-medium text-gray-900 mb-2">{video.title}</h3>
+                  <p className="text-sm text-gray-600 mb-3">{video.description}</p>
+                  <a
+                    href={video.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium"
+                  >
+                    <Youtube className="h-4 w-4 mr-1" />
+                    Watch Video
+                  </a>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Results Count */}
         <div className="mb-6">
